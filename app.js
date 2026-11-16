@@ -27,7 +27,8 @@ const ICONS={
   edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
   tv:'<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/>',
   phone:'<rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M11 17.5h2"/>',
-  pause:'<path d="M9 6v12M15 6v12"/>'
+  pause:'<path d="M9 6v12M15 6v12"/>',
+  folder:'<path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>'
 };
 const ic=n=>`<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]}</svg>`;
 
@@ -37,7 +38,13 @@ const ic=n=>`<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]}</
 const STR={
 es:{
   locale:'es-MX', defTitle:'Tablero de Trivia', kicker:'Editor · se guarda solo', team:n=>`Equipo ${n}`,
-  tabQ:'Preguntas',tabB:'Banco',tabT:'Equipos',tabS:'Ajustes',
+  tabQ:'Preguntas',tabB:'Banco',tabT:'Equipos',tabS:'Ajustes',tabG:'Guardados',
+  gSave:'Guardar este tablero',gNew:'Tablero nuevo',gOpen:'Abrir',gDup:'Duplicar',gCur:'Abierto ahora',gAuto:'Se guarda solo',gUnsaved:'Este tablero todavía no está guardado.',
+  gName:'¿Cómo se llama este tablero?',gSaved:n=>`“${n}” guardado`,gOpened:n=>`“${n}” abierto`,gDel:n=>`¿Borrar el tablero “${n}”? No se puede deshacer.`,gDeleted:'Tablero borrado',
+  gExists:n=>`Ya tienes un tablero llamado “${n}”. ¿Reemplazarlo con este?`,gAsk:'El tablero abierto no está guardado y se va a perder. ¿Guardarlo primero?',gCopy:n=>`${n} (copia)`,
+  gEmpty:'Todavía no tienes tableros guardados. Arma uno en Preguntas y toca “Guardar este tablero”.',gN:(q,d)=>`${q} preguntas · ${d}`,
+  gHint:'Puedes guardar todos los tableros que quieras. El que está abierto se guarda solo con cada cambio. Viven en este navegador: para pasarlos a otro cel o compu, o tener respaldo, toca “Descargar respaldo de todo” y en el otro abre ese archivo con “Abrir archivo” (en Ajustes).',
+  gBackup:'Descargar respaldo de todo',
   cont:'Continuar',newGame:'Nuevo juego',play:'Jugar',
   loadBank:'Cargar del banco…',grpBank:'Banco de preguntas',grpMine:'Mis categorías',noName:'(sin nombre)',
   catName:'Nombre de la categoría',saveMine:'Guardar en Mis categorías',clearCat:'Vaciar categoría',
@@ -97,7 +104,13 @@ es:{
 },
 en:{
   locale:'en-US', defTitle:'Trivia Board', kicker:'Editor · autosaves', team:n=>`Team ${n}`,
-  tabQ:'Questions',tabB:'Bank',tabT:'Teams',tabS:'Settings',
+  tabQ:'Questions',tabB:'Bank',tabT:'Teams',tabS:'Settings',tabG:'Saved',
+  gSave:'Save this board',gNew:'New board',gOpen:'Open',gDup:'Duplicate',gCur:'Open now',gAuto:'Autosaves',gUnsaved:'This board isn’t saved yet.',
+  gName:'What do you want to call this board?',gSaved:n=>`“${n}” saved`,gOpened:n=>`“${n}” opened`,gDel:n=>`Delete the board “${n}”? This can’t be undone.`,gDeleted:'Board deleted',
+  gExists:n=>`You already have a board called “${n}”. Replace it with this one?`,gAsk:'The open board isn’t saved and will be lost. Save it first?',gCopy:n=>`${n} (copy)`,
+  gEmpty:'No saved boards yet. Build one in Questions and tap “Save this board”.',gN:(q,d)=>`${q} questions · ${d}`,
+  gHint:'Save as many boards as you like. The open one saves itself on every change. They live in this browser: to move them to another phone or computer, or keep a backup, tap “Download backup of everything” and open that file on the other one with “Open file” (in Settings).',
+  gBackup:'Download backup of everything',
   cont:'Continue',newGame:'New game',play:'Play',
   loadBank:'Load from bank…',grpBank:'Question bank',grpMine:'My categories',noName:'(untitled)',
   catName:'Category name',saveMine:'Save to My categories',clearCat:'Clear category',
@@ -162,7 +175,7 @@ en:{
 const CAT_COLORS=['#ff5a36','#ffc21a','#2bd49a','#5aa9ff','#ff4fa3','#b48cff'];
 const PALETTE=['#ff5a36','#5aa9ff','#ffc21a','#2bd49a','#ff4fa3','#b48cff','#9be04a','#ff9f1c'];
 const catColor=i=>CAT_COLORS[i%CAT_COLORS.length];
-const LS_CFG='trivia.config.v1', LS_GAME='trivia.game.v1', LS_BANK='trivia.mybank.v1', LS_EDITS='trivia.bankedits.v1';
+const LS_CFG='trivia.config.v1', LS_GAME='trivia.game.v1', LS_BANK='trivia.mybank.v1', LS_EDITS='trivia.bankedits.v1', LS_BOARDS='trivia.boards.v1';
 const store={
   get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},
   set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
@@ -228,7 +241,24 @@ function normalize(c){
 }
 let game=store.get(LS_GAME);
 let cfg=store.get(LS_CFG); cfg=cfg?normalize(cfg):defaultConfig(navLang);
-let saveT; function saveCfg(){clearTimeout(saveT);saveT=setTimeout(()=>store.set(LS_CFG,cfg),250)}
+let saveT; function saveCfg(){clearTimeout(saveT);saveT=setTimeout(()=>{store.set(LS_CFG,cfg);syncBoard()},250)}
+/* ---------- tableros guardados (varios, con nombre) ---------- */
+let boards=store.get(LS_BOARDS); if(!Array.isArray(boards)) boards=[];
+const newId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const curBoard=()=>cfg&&cfg.bid?boards.find(b=>b.id===cfg.bid):null;
+function saveBoards(){store.set(LS_BOARDS,boards)}
+function boardSnap(){const c=clone(cfg);delete c.bid;return c}
+/* el tablero abierto se copia solo a su guardado con cada cambio */
+function syncBoard(){const b=curBoard();if(!b)return;b.cfg=boardSnap();b.name=(cfg.title||'').trim()||b.name;b.updated=Date.now();saveBoards()}
+function saveBoardAs(name){
+  name=String(name||'').trim().slice(0,40); if(!name) return false;
+  const same=boards.find(b=>b.name.toLowerCase()===name.toLowerCase()&&b.id!==cfg.bid);
+  if(same){if(!confirm(t('gExists',name)))return false;boards=boards.filter(b=>b!==same)}
+  cfg.title=name; const id=newId(); boards.unshift({id,name,updated:Date.now(),cfg:null}); cfg.bid=id; syncBoard(); store.set(LS_CFG,cfg); return true;
+}
+function askSaveCurrent(){if(curBoard()||filledCount()===0)return true;if(!confirm(t('gAsk')))return true;const n=prompt(t('gName'),cfg.title||t('defTitle'));return n?saveBoardAs(n):false}
+function openBoard(id){const b=boards.find(x=>x.id===id);if(!b||!b.cfg)return;if(cfg.bid!==id&&!askSaveCurrent())return;cfg=normalize(clone(b.cfg));cfg.bid=id;store.set(LS_CFG,cfg);tab='preguntas';renderSetup();toast(t('gOpened',b.name))}
+try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{})}catch(e){}
 function saveGame(){store.set(LS_GAME,game);sync()}
 let tab='preguntas', bankTarget=0;
 
@@ -246,7 +276,7 @@ function setLang(lang){
   if(fi>=0) cfg.final=clone(FINALS[lang][fi]);
   cfg.teams.forEach((tm,i)=>{if(tm.name===STR[from].team(i+1))tm.name=STR[lang].team(i+1)});
   if(cfg.title===STR[from].defTitle) cfg.title=STR[lang].defTitle;
-  cfg.lang=lang; store.set(LS_CFG,cfg);
+  cfg.lang=lang; store.set(LS_CFG,cfg); syncBoard();
   if(game&&game.cfg){game.cfg.lang=lang;saveGame()}
   applyLang();
 }
@@ -300,7 +330,7 @@ function renderSetup(){
   const el=$('#setup');
   const hasGame=game&&game.phase&&game.phase!=='done';
   const mode=typeof RC!=='undefined'?RC.mode:null;
-  const T=[['preguntas',t('tabQ'),`${filledCount()}/${cfg.categories.length*5}`],['banco',t('tabB'),bankList().length+myBank.length],['equipos',t('tabT'),cfg.teams.length],['ajustes',t('tabS'),'']];
+  const T=[['preguntas',t('tabQ'),`${filledCount()}/${cfg.categories.length*5}`],['guardados',t('tabG'),boards.length],['banco',t('tabB'),bankList().length+myBank.length],['equipos',t('tabT'),cfg.teams.length],['ajustes',t('tabS'),'']];
   el.innerHTML=`
   ${mode==='remote'?`<div class="rc-banner"><span class="dot ${RC.connected?'on':''}"></span><span class="txt">${t('rmBanner',RC.code)}</span><button class="btn sm gold" id="rcBack">${ic('phone')} ${t('rmBackCtl')}</button></div>`:''}
   ${mode==='host'?`<div class="rc-banner"><span class="dot on"></span><span class="txt">${t('tvBanner',RC.code)}</span><button class="btn sm gold" id="tvBack">${ic('tv')} ${t('tvShow')}</button></div>`:''}
@@ -327,7 +357,7 @@ function renderSetup(){
 }
 function renderTab(){
   const b=$('#tabBody');
-  b.innerHTML={preguntas:tplPreguntas,banco:tplBanco,equipos:tplEquipos,ajustes:tplAjustes}[tab]();
+  b.innerHTML={preguntas:tplPreguntas,banco:tplBanco,equipos:tplEquipos,guardados:tplGuardados,ajustes:tplAjustes}[tab]();
   b.classList.remove('tabpane');void b.offsetWidth;b.classList.add('tabpane');
 }
 function tplPreguntas(){
@@ -411,6 +441,30 @@ function tplEquipos(){
       <div class="sw">${PALETTE.map(c=>`<button style="--c:${c}" class="${c.toLowerCase()===String(tm.color).toLowerCase()?'on':''}" data-tcolor="${i}" data-col="${c}" aria-label="${c}"></button>`).join('')}</div>
     </div>`).join('')}
   </div>`;
+}
+function tplGuardados(){
+  const cur=curBoard();
+  const when=ms=>new Date(ms).toLocaleString(L().locale,{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});
+  return `
+  <div class="toolbar">
+    ${cur?`<span class="gstate on">${ic('check')} ${t('gAuto')}: <b>${esc(cur.name)}</b></span>`:`<span class="gstate">${t('gUnsaved')}</span>`}
+    <span class="grow"></span>
+    ${cur?'':`<button class="btn sm gold" id="gSave">${ic('save')} ${t('gSave')}</button>`}
+    <button class="btn sm" id="gNew">${ic('plus')} ${t('gNew')}</button>
+  </div>
+  <p class="hint" style="margin:-4px 0 14px">${t('gHint')}</p>
+  ${boards.length?`<div class="bank-grid">${boards.map((b,k)=>{const c=b.cfg?normalize(clone(b.cfg)):null;if(!c)return '';const isCur=cur&&cur.id===b.id;
+    return `<article class="bk ${isCur?'gcur':''}" style="--cc:${isCur?'#ffc21a':catColor(k)};--k:${Math.min(k,12)}">
+      <h4><span>${esc(b.name||t('noName'))}</span>${isCur?`<span class="tag">${t('gCur')}</span>`:''}</h4>
+      <div class="bk-n">${t('gN',filledCount(c),when(b.updated))}</div>
+      <ol>${c.categories.slice(0,6).map(x=>`<li><span>${esc(x.name||'—')}</span></li>`).join('')}</ol>
+      <div class="acts">
+        ${isCur?'':`<button class="btn sm dark" data-gopen="${b.id}">${ic('folder')} ${t('gOpen')}</button>`}
+        <button class="btn sm icon" data-gdup="${b.id}" title="${t('gDup')}" aria-label="${t('gDup')}">${ic('grid')}</button>
+        <button class="btn sm icon red" data-gdel="${b.id}" title="${t('del')}" aria-label="${t('del')}">${ic('trash')}</button>
+      </div>
+    </article>`}).join('')}</div>`:`<div class="empty">${t('gEmpty')}</div>`}
+  <div style="margin-top:18px"><button class="btn sm" id="btnExport">${ic('down')} ${t('gBackup')}</button></div>`;
 }
 function tplAjustes(){
   const sel=(id,vals,cur,f)=>`<select id="${id}">${vals.map(v=>`<option value="${v}" ${v==cur?'selected':''}>${f(v)}</option>`).join('')}</select>`;
@@ -504,9 +558,14 @@ $('#setup').addEventListener('click',e=>{
     store.set(LS_BANK,myBank);toast(ex>=0?t('updMine'):t('savedMine'));renderSetup();return}
   if(b.dataset.use){cfg.categories[bankTarget]=catFromKey(b.dataset.use);toast(t('placed',cfg.categories[bankTarget].name,bankTarget+1));bankTarget=(bankTarget+1)%cfg.categories.length;saveCfg();renderSetup();return}
   if(b.dataset.editbank){openBankEditor(b.dataset.editbank);return}
+  if(b.id==='gSave'){const n=prompt(t('gName'),cfg.title||t('defTitle'));if(n&&saveBoardAs(n)){toast(t('gSaved',cfg.title));renderSetup()}return}
+  if(b.id==='gNew'){if(!askSaveCurrent())return;cfg=defaultConfig(cfg.lang);store.set(LS_CFG,cfg);tab='preguntas';renderSetup();return}
+  if(b.dataset.gopen){openBoard(b.dataset.gopen);return}
+  if(b.dataset.gdup){const o=boards.find(x=>x.id===b.dataset.gdup);if(!o||!o.cfg)return;if(o.id===cfg.bid)syncBoard();const name=t('gCopy',o.name).slice(0,40);const c=clone(o.cfg);c.title=name;boards.unshift({id:newId(),name,updated:Date.now(),cfg:c});saveBoards();renderSetup();toast(t('gSaved',name));return}
+  if(b.dataset.gdel){const o=boards.find(x=>x.id===b.dataset.gdel);if(!o||!confirm(t('gDel',o.name)))return;boards=boards.filter(x=>x!==o);saveBoards();if(cfg.bid===o.id){delete cfg.bid;store.set(LS_CFG,cfg)}renderSetup();toast(t('gDeleted'));return}
   if(b.id==='btnNewCat'){openBankEditor(null);return}
   if(b.dataset.tcolor!==undefined){const i=+b.dataset.tcolor;cfg.teams[i].color=b.dataset.col;saveCfg();const row=b.closest('.tm');row.style.setProperty('--tc',b.dataset.col);row.querySelectorAll('.sw button').forEach(x=>x.classList.toggle('on',x===b));return}
-  if(b.id==='btnExport'){const blob=new Blob([JSON.stringify({...cfg,myBank,bankEdits:edits},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(cfg.title||'trivia').replace(/[^\w\-áéíóúñ ]/gi,'').trim().replace(/\s+/g,'-')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);return}
+  if(b.id==='btnExport'){const blob=new Blob([JSON.stringify({...cfg,myBank,bankEdits:edits,boards},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(cfg.title||'trivia').replace(/[^\w\-áéíóúñ ]/gi,'').trim().replace(/\s+/g,'-')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);return}
   if(b.id==='btnImport'){$('#importFile').click();return}
   if(b.id==='btnShare'){shareLink();return}
   if(b.id==='btnReset'){if(!confirm(t('confReset')))return;cfg=defaultConfig(cfg.lang);store.set(LS_CFG,cfg);store.del(LS_GAME);game=null;renderSetup();return}
@@ -544,21 +603,22 @@ $('#importFile').addEventListener('change',e=>{
   r.onload=()=>{try{const d=JSON.parse(r.result);
     if(Array.isArray(d.myBank)&&d.myBank.length){const names=new Set(myBank.map(b=>b.name));d.myBank.forEach(b=>{if(b&&Array.isArray(b.clues)&&!names.has(b.name))myBank.push({name:String(b.name||''),clues:b.clues.map(c=>({q:String(c.q||''),a:String(c.a||'')}))})});store.set(LS_BANK,myBank)}
     if(d.bankEdits&&typeof d.bankEdits==='object'){['es','en'].forEach(l=>{if(d.bankEdits[l])Object.assign(edits[l],d.bankEdits[l])});store.set(LS_EDITS,edits)}
-    delete d.myBank;delete d.bankEdits;cfg=normalize(d);store.set(LS_CFG,cfg);renderSetup();toast(t('fileOk'))}catch(err){toast(t('fileBad'))}};
+    if(Array.isArray(d.boards)){d.boards.forEach(b=>{if(!b||!b.id||!b.cfg)return;const i=boards.findIndex(x=>x.id===b.id);const o={id:String(b.id),name:String(b.name||b.cfg.title||''),updated:+b.updated||Date.now(),cfg:b.cfg};if(i>=0){if(o.updated>=(boards[i].updated||0))boards[i]=o}else boards.push(o)});boards.sort((a,b)=>b.updated-a.updated);saveBoards()}
+    delete d.myBank;delete d.bankEdits;delete d.boards;if(d.bid&&!boards.some(x=>x.id===d.bid))delete d.bid;cfg=normalize(d);store.set(LS_CFG,cfg);renderSetup();toast(t('fileOk'))}catch(err){toast(t('fileBad'))}};
   r.readAsText(f); e.target.value='';
 });
 
 function b64enc(obj){const bytes=new TextEncoder().encode(JSON.stringify(obj));let s='';for(let i=0;i<bytes.length;i+=8192)s+=String.fromCharCode.apply(null,bytes.subarray(i,i+8192));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
 function b64dec(str){str=str.replace(/-/g,'+').replace(/_/g,'/');while(str.length%4)str+='=';const s=atob(str);return JSON.parse(new TextDecoder().decode(Uint8Array.from(s,c=>c.charCodeAt(0))))}
 function shareLink(){
-  const url=location.origin+location.pathname+'#j='+b64enc(cfg);
+  const url=location.origin+location.pathname+'#j='+b64enc(boardSnap());
   const done=()=>toast(t('linkOk'));
   if(navigator.clipboard&&window.isSecureContext) navigator.clipboard.writeText(url).then(done,()=>prompt(t('copyLink'),url));
   else prompt(t('copyLink'),url);
 }
 function checkHash(){
   if(!location.hash.startsWith('#j=')) return;
-  try{const d=b64dec(location.hash.slice(3));if(confirm(t('confShared',d.title||'Trivia'))){cfg=normalize(d);store.set(LS_CFG,cfg);store.del(LS_GAME);game=null;setTimeout(()=>toast(t('sharedOk')),300)}}
+  try{const d=b64dec(location.hash.slice(3));if(confirm(t('confShared',d.title||'Trivia'))&&askSaveCurrent()){delete d.bid;cfg=normalize(d);store.set(LS_CFG,cfg);store.del(LS_GAME);game=null;setTimeout(()=>toast(t('sharedOk')),300)}}
   catch(e){toast(t('sharedBad'))}
   history.replaceState(null,'',location.pathname+location.search);
 }

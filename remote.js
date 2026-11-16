@@ -125,7 +125,7 @@ function hostOnData(conn,d){
   if(!d||typeof d!=='object') return;
   if(d.t==='hello'){hostSend(conn);return}
   if(d.t==='start'){
-    try{const c=normalize(d.cfg);if(filledCount(c)===0){conn.send({t:'toast',msg:t('addOne')});return}cfg=c;store.set(LS_CFG,cfg);startGame(true)}catch(e){}
+    try{const c=normalize(d.cfg);delete c.bid;if(filledCount(c)===0){conn.send({t:'toast',msg:t('addOne')});return}cfg=c;store.set(LS_CFG,cfg);startGame(true)}catch(e){}
     return;
   }
   if(d.t==='resume'){if(game&&game.phase!=='done')showGame(true);return}

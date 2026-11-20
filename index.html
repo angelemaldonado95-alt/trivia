@@ -443,6 +443,11 @@ body.stage .toast{background:var(--paper);color:var(--ink)}
   *,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}
   .bulbs,.rays{animation:none!important}
 }
+.mix-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;max-height:55vh;overflow:auto;padding:2px}
+.mix-g{border:2px solid var(--ink);border-radius:12px;padding:8px 12px;margin:0;background:var(--paper2)}
+.mix-g legend{font-weight:800;text-transform:uppercase;letter-spacing:.05em;font-size:12px;padding:0 6px}
+.mix-c{display:flex;gap:8px;align-items:center;padding:3px 0;font-weight:600;cursor:pointer}
+.mix-c input{width:18px;height:18px;accent-color:var(--ink)}
 </style>
 </head>
 <body>
@@ -455,8 +460,8 @@ body.stage .toast{background:var(--paper);color:var(--ink)}
 <canvas id="confetti" hidden></canvas>
 <input type="file" id="importFile" accept=".json,application/json" hidden>
 
-<script src="bank.js"></script>
-<script src="app.js"></script>
-<script src="remote.js"></script>
+<script src="bank.js?v=3"></script>
+<script src="app.js?v=3"></script>
+<script src="remote.js?v=3"></script>
 </body>
 </html>

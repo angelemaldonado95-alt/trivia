@@ -46,7 +46,7 @@ es:{
   gHint:'Puedes guardar todos los tableros que quieras. El que está abierto se guarda solo con cada cambio. Viven en este navegador: para pasarlos a otro cel o compu, o tener respaldo, toca “Descargar respaldo de todo” y en el otro abre ese archivo con “Abrir archivo” (en Ajustes).',
   gBackup:'Descargar respaldo de todo',
   cont:'Continuar',newGame:'Nuevo juego',play:'Jugar',
-  loadBank:'Cargar del banco…',grpBank:'Banco de preguntas',grpMine:'Mis categorías',noName:'(sin nombre)',
+  loadBank:'Cargar del banco…',grpMix:'Mezclas',mixRand:'🎲 Revoltijo al azar',mixPick:'🔀 Mezclar categorías…',mixTitle:'Mezclar categorías',mixHint:'Escoge 2 o más categorías del banco. Se toma una pregunta de cada nivel, repartidas entre las que escojas, y el juego le pone nombre a la mezcla (lo puedes cambiar).',mixGo:'Mezclar',mixFew:'Escoge al menos 2 categorías',grpBank:'Banco de preguntas',grpMine:'Mis categorías',noName:'(sin nombre)',
   catName:'Nombre de la categoría',saveMine:'Guardar en Mis categorías',clearCat:'Vaciar categoría',
   qPh:'Escribe la pregunta',aPh:'Respuesta',aL:'R',
   cats:'Categorías',random:'Aleatorio del banco',reroll:'Otras preguntas',clearAll:'Vaciar todo',
@@ -112,7 +112,7 @@ en:{
   gHint:'Save as many boards as you like. The open one saves itself on every change. They live in this browser: to move them to another phone or computer, or keep a backup, tap “Download backup of everything” and open that file on the other one with “Open file” (in Settings).',
   gBackup:'Download backup of everything',
   cont:'Continue',newGame:'New game',play:'Play',
-  loadBank:'Load from bank…',grpBank:'Question bank',grpMine:'My categories',noName:'(untitled)',
+  loadBank:'Load from bank…',grpMix:'Mixes',mixRand:'🎲 Random mix',mixPick:'🔀 Mix categories…',mixTitle:'Mix categories',mixHint:'Pick 2 or more bank categories. One question per level is drawn, spread across your picks, and the game names the mix (you can rename it).',mixGo:'Mix',mixFew:'Pick at least 2 categories',grpBank:'Question bank',grpMine:'My categories',noName:'(untitled)',
   catName:'Category name',saveMine:'Save to My categories',clearCat:'Clear category',
   qPh:'Type the question',aPh:'Answer',aL:'A',
   cats:'Categories',random:'Random from bank',reroll:'Other questions',clearAll:'Clear all',
@@ -216,6 +216,56 @@ function pickCat(src,meta){
 }
 function catFromKey(v){const [k,i]=v.split(':');if(k==='b'){const b=bankList()[+i];return pickCat(b,b.edited?null:{lang:cfg.lang,i:+i})}return pickCat(myBank[+i])}
 function keyName(v){const [k,i]=v.split(':');return (k==='b'?bankList()[+i]:myBank[+i])?.name||''}
+/* ---------- mezclas: preguntas de varias categorías, el juego le pone nombre ---------- */
+const THEMES=[
+  ['peques',/peques|infantil|little ones|children/i],
+  ['musica',/m[úu]sic|canci|rock|pop latino|banda|qui[ée]n canta|antaño|songs|hits|oldies/i],
+  ['deporte',/deport|f[úu]tbol|b[ée]isbol|lucha|box|f[óo]rmula|ol[íi]mpi|b[áa]squet|tenis|sports|football|baseball|boxing|basketball/i],
+  ['juegos',/videojuego|minecraft|pok[ée]mon|juguete|reto|acertijo|adivinanza|game|riddle|challenge|puzzle/i],
+  ['cine',/cine|pel[íi]cula|disney|pixar|star wars|saga|harry potter|shrek|simpson|bob esponja|villano|superh[ée]roe|\btv\b|caricatura|entretenimiento|emoji|frases de|movie|cartoon|spongebob|entertainment/i],
+  ['mexico',/m[ée]xic|yucat|m[ée]rida|maya|tradici|dulces|refr[áa]n|lotería|baúl|recuerdos|saying|blast/i],
+  ['naturaleza',/animal|mascota|dinosaur|\bel mar\b|plantas|frutas|pets|ocean|plants|fruits/i],
+  ['ciencia',/ciencia|espacio|cuerpo|tecnolog|invento|n[úu]mero|matem|science|space|body|tech|invent|number|math/i],
+  ['mundo',/geograf|capital|bandera|pa[íi]ses|idioma|maravilla|del mundo|mundial|transporte|geograph|flag|countr|language|wonder|world|transport/i]];
+const MIXN={es:{peques:['Recreo revuelto','Hora del recreo','Mochila de preguntas'],musica:['Popurrí musical','Rocola revuelta','Karaoke de preguntas'],deporte:['Cancha mixta','Tiempo extra','Medalla revuelta'],juegos:['Control en mano','Juego de juegos','Nivel secreto'],cine:['Palomitas y claqueta','Función de gala','Cartelera revuelta'],mexico:['Puro México','Mole de preguntas','Lotería revuelta'],naturaleza:['Safari revuelto','Arca de Noé','Bichos y más'],ciencia:['Laboratorio loco','Ciencia revuelta','Cerebritos'],mundo:['Vuelta al mundo','Pasaporte revuelto','Maleta de preguntas'],mix:['Revoltijo','Pozole de preguntas','De todo un poco','Ensalada de preguntas','Botana surtida','Ponche de preguntas','Piñata de preguntas']},
+  en:{peques:['Recess Mix','Backpack Bonanza','Playtime'],musica:['Mixtape','Jukebox Jumble','Karaoke Night'],deporte:['Mixed Court','Overtime','Medal Mix'],juegos:['Player One','Game of Games','Secret Level'],cine:['Popcorn & Clapper','Gala Night','Movie Jumble'],mexico:['Pure Mexico','Mole Mix','Lotería Shuffle'],naturaleza:['Safari Mix','Noah\'s Ark','Critters & Co.'],ciencia:['Mad Lab','Science Shuffle','Brainiacs'],mundo:['Around the World','Passport Mix','Suitcase of Questions'],mix:['Potpourri','Question Pozole','A Bit of Everything','Trivia Salad','Mixed Snacks','Piñata of Questions']}};
+function themeOf(i){const n=(RAW.es[i]||{}).name||'';for(const [k,re] of THEMES)if(re.test(n))return k;return 'mix'}
+function mixNameKey(idxs){const th=[...new Set(idxs.map(themeOf))];const k=th.length===1?th[0]:'mix';return [k,Math.floor(Math.random()*MIXN.es[k].length)]}
+const mixName=(lang,nk)=>{const L=MIXN[lang]||MIXN.es,arr=L[nk[0]]||L.mix;return arr[nk[1]%arr.length]};
+function pickMix(lang,idxs,nk){
+  const list=bankList(lang),cats=idxs.map(i=>list[i]).filter(Boolean);if(cats.length<1)return blankCat();
+  const order=shuffle(idxs.slice());const picks=[];
+  for(let k=0;k<5;k++){
+    let got=null;
+    for(let tries=0;tries<order.length&&!got;tries++){
+      const ci=order[(k+tries)%order.length],src=list[ci];if(!src)continue;
+      const n=src.clues.length,pool=[];for(let i=0;i<n;i++)if(Math.floor(i*5/n)===k&&src.clues[i].q)pool.push(i);
+      if(pool.length)got=[ci,pool[Math.floor(Math.random()*pool.length)]];
+    }
+    picks.push(got||[-1,-1]);
+  }
+  nk=nk||mixNameKey(idxs);
+  return {name:mixName(lang,nk),clues:picks.map(([ci,qi])=>ci>=0?{q:list[ci].clues[qi].q||'',a:list[ci].clues[qi].a||''}:{q:'',a:''}),src:{lang,mix:idxs.slice(),picks,nk}};
+}
+function randomMix(lang){const n=RAW[lang].length;const idxs=shuffle([...Array(n).keys()]).slice(0,3);return pickMix(lang,idxs)}
+let mixTarget=0;
+function openMixPicker(ci){
+  mixTarget=ci; modalCtx={type:'mix'};
+  const list=bankList();
+  const groups={};list.forEach((b,i)=>{const k=themeOf(i);(groups[k]=groups[k]||[]).push([b,i])});
+  const lab={es:{peques:'Para niños',musica:'Música',deporte:'Deportes',juegos:'Juegos y retos',cine:'Cine y TV',mexico:'México',naturaleza:'Naturaleza',ciencia:'Ciencia',mundo:'Mundo',mix:'De todo'},en:{peques:'Kids',musica:'Music',deporte:'Sports',juegos:'Games & challenges',cine:'Movies & TV',mexico:'Mexico',naturaleza:'Nature',ciencia:'Science',mundo:'World',mix:'Everything else'}}[cfg.lang]||{};
+  const sh=openModal(`
+    <div class="sh-top"><span class="cchip">${t('mixTitle')}</span><span class="sp"></span></div>
+    <p class="hint" style="margin:12px 0">${t('mixHint')}</p>
+    <div class="mix-grid">${Object.keys(lab).filter(k=>groups[k]).map(k=>`<fieldset class="mix-g"><legend>${lab[k]}</legend>${groups[k].map(([b,i])=>`<label class="mix-c"><input type="checkbox" value="${i}"> ${esc(b.name)}</label>`).join('')}</fieldset>`).join('')}</div>
+    <div class="actions"><button class="btn dark" id="mixGo">${ic('check')} ${t('mixGo')}</button><button class="btn" id="mixCancel">${t('cancel')}</button></div>`,'card-sheet ed-sheet');
+  sh.style.setProperty('--cc',catColor(ci));
+}
+function mixClick(b){
+  if(b.id==='mixCancel'){closeModal();return}
+  if(b.id==='mixGo'){const idxs=[...document.querySelectorAll('.mix-c input:checked')].map(x=>+x.value);if(idxs.length<2){toast(t('mixFew'));return}
+    cfg.categories[mixTarget]=pickMix(cfg.lang,idxs);saveCfg();closeModal(true);renderSetup();sfx('pop');return}
+}
 function randomCats(n,lang){const list=bankList(lang);return shuffle(list).slice(0,n).map(b=>pickCat(b,b.edited?null:{lang,i:b.idx}))}
 
 function defaultConfig(lang=navLang){
@@ -234,7 +284,7 @@ function normalize(c){
   if(!Array.isArray(c.teams)||c.teams.length<1) c.teams=d.teams;
   c.teams=c.teams.slice(0,6).map((tm,i)=>({name:String(tm.name||STR[lang].team(i+1)),color:/^#[0-9a-f]{3,8}$/i.test(tm.color||'')?tm.color:PALETTE[i%PALETTE.length]}));
   if(!Array.isArray(c.categories)||!c.categories.length) c.categories=d.categories;
-  c.categories=c.categories.slice(0,6).map(k=>{const o={name:String(k.name||''),clues:Array.from({length:5},(_,i)=>({q:String(k.clues?.[i]?.q||''),a:String(k.clues?.[i]?.a||'')}))};if(k.src&&Array.isArray(k.src.picks))o.src={lang:k.src.lang,i:+k.src.i,picks:k.src.picks.map(Number)};return o});
+  c.categories=c.categories.slice(0,6).map(k=>{const o={name:String(k.name||''),clues:Array.from({length:5},(_,i)=>({q:String(k.clues?.[i]?.q||''),a:String(k.clues?.[i]?.a||'')}))};if(k.src&&Array.isArray(k.src.mix)&&Array.isArray(k.src.picks))o.src={lang:k.src.lang,mix:k.src.mix.map(Number),picks:k.src.picks.map(p=>[+p[0],+p[1]]),nk:Array.isArray(k.src.nk)?[String(k.src.nk[0]),+k.src.nk[1]]:['mix',0]};else if(k.src&&Array.isArray(k.src.picks))o.src={lang:k.src.lang,i:+k.src.i,picks:k.src.picks.map(Number)};return o});
   c.final=Object.assign({category:'',q:'',a:''},c.final||{});
   ['step','timer','finalTimer','dd'].forEach(k=>{c[k]=Number(c[k])||0});if(!c.step)c.step=100;
   return c;
@@ -267,7 +317,14 @@ function setLang(lang){
   if(lang===cfg.lang||!STR[lang]) return;
   const from=cfg.lang, same=(x,y)=>JSON.stringify(x)===JSON.stringify(y);
   cfg.categories=cfg.categories.map(c=>{
-    const s=c.src; if(!s||s.lang!==from||!RAW[from][s.i]) return c;
+    const s=c.src; if(s&&s.mix&&s.lang===from){
+      const ok=s.picks.every(([ci,qi])=>ci<0||RAW[from][ci]&&RAW[from][ci].clues[qi]);if(!ok)return c;
+      const orig=s.picks.map(([ci,qi])=>ci>=0?RAW[from][ci].clues[qi]:{q:'',a:''});
+      if(!same(orig.map(o=>[o.q,o.a]),c.clues.map(o=>[o.q,o.a]))) return c;
+      const named=c.name===mixName(from,s.nk);
+      return {name:named?mixName(lang,s.nk):c.name,clues:s.picks.map(([ci,qi])=>ci>=0?{...RAW[lang][ci].clues[qi]}:{q:'',a:''}),src:{...s,lang}};
+    }
+    if(!s||s.lang!==from||!RAW[from][s.i]) return c;
     const orig=s.picks.map(i=>i>=0?RAW[from][s.i].clues[i]:{q:'',a:''});
     if(c.name!==RAW[from][s.i].name||!same(orig.map(o=>[o.q,o.a]),c.clues.map(o=>[o.q,o.a]))) return c;
     const B=RAW[lang][s.i];return {name:B.name,clues:s.picks.map(i=>i>=0?{...B.clues[i]}:{q:'',a:''}),src:{lang,i:s.i,picks:s.picks}};
@@ -316,7 +373,7 @@ function sfx(n){const on=game&&game.cfg?game.cfg.sound:cfg.sound; if(!on) return
    EDITOR
    ========================================================= */
 function bankOptions(){
-  let h=`<option value="">${t('loadBank')}</option><optgroup label="${t('grpBank')}">`;
+  let h=`<option value="">${t('loadBank')}</option><optgroup label="${t('grpMix')}"><option value="x:rand">${t('mixRand')}</option><option value="x:pick">${t('mixPick')}</option></optgroup><optgroup label="${t('grpBank')}">`;
   bankList().forEach((b,i)=>h+=`<option value="b:${i}">${esc(b.name)}</option>`);
   h+='</optgroup>';
   if(myBank.length){h+=`<optgroup label="${t('grpMine')}">`;myBank.forEach((b,i)=>h+=`<option value="m:${i}">${esc(b.name||t('noName'))}</option>`);h+='</optgroup>'}
@@ -550,7 +607,8 @@ $('#setup').addEventListener('click',e=>{
   if(b.id==='btnRandom'){if(!confirm(t('confRandom')))return;cfg.categories=randomCats(cfg.categories.length,cfg.lang);saveCfg();renderSetup();toast(t('tRandom'));return}
   if(b.id==='btnBlank'){if(!confirm(t('confBlank')))return;cfg.categories=cfg.categories.map(blankCat);cfg.final={category:'',q:'',a:''};saveCfg();renderSetup();return}
   if(b.dataset.clear){const i=+b.dataset.clear;if(!confirm(t('confClear')))return;cfg.categories[i]=blankCat();saveCfg();renderSetup();return}
-  if(b.dataset.reroll){const i=+b.dataset.reroll,s=cfg.categories[i].src;if(!s)return;const B=bankList(s.lang)[s.i];if(!B)return;cfg.categories[i]=pickCat(B,B.edited?null:{lang:s.lang,i:s.i});saveCfg();renderSetup();sfx('pop');return}
+  if(b.dataset.reroll){const i=+b.dataset.reroll,s=cfg.categories[i].src;if(!s)return;
+    if(s.mix){const old=cfg.categories[i].name,keep=old!==mixName(s.lang,s.nk);const c=pickMix(s.lang,s.mix,s.nk);if(keep)c.name=old;cfg.categories[i]=c;saveCfg();renderSetup();sfx('pop');return}const B=bankList(s.lang)[s.i];if(!B)return;cfg.categories[i]=pickCat(B,B.edited?null:{lang:s.lang,i:s.i});saveCfg();renderSetup();sfx('pop');return}
   if(b.dataset.savebank){const c=cfg.categories[+b.dataset.savebank];if(!c.name.trim()&&!c.clues.some(q=>q.q.trim())){toast(t('emptyCat'));return}
     const cat={name:c.name,clues:c.clues.filter(q=>q.q.trim()).map(q=>({q:q.q,a:q.a}))};
     const ex=c.name.trim()?myBank.findIndex(x=>x.name.trim().toLowerCase()===c.name.trim().toLowerCase()):-1;
@@ -582,6 +640,9 @@ $('#setup').addEventListener('input',e=>{
 });
 $('#setup').addEventListener('change',e=>{
   const el=e.target, d=el.dataset;
+  if(d.load!==undefined&&el.value.startsWith('x:')){const ci=+d.load,v=el.value;const cur=cfg.categories[ci];el.value='';
+    if(cur.clues.some(q=>q.q.trim())&&!confirm(t('confReplace',ci+1,v==='x:rand'?t('mixRand'):t('mixTitle'))))return;
+    if(v==='x:rand'){cfg.categories[ci]=randomMix(cfg.lang);saveCfg();renderSetup();sfx('pop')}else openMixPicker(ci);return}
   if(d.load!==undefined&&el.value){const ci=+d.load;const cur=cfg.categories[ci];
     if(cur.clues.some(q=>q.q.trim())&&!confirm(t('confReplace',ci+1,keyName(el.value)))){el.value='';return}
     cfg.categories[ci]=catFromKey(el.value);saveCfg();renderSetup();return}
@@ -971,6 +1032,7 @@ $('#modal').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b||busy) return;
   const x=modalCtx; if(!x) return;
   if(x.type==='edit'){bankEditorClick(b);return}
+  if(x.type==='mix'){mixClick(b);return}
   if(x.type==='clue'){
     if(b.id==='btnReveal') reveal();
     else if(b.id==='btnClose') closeClue();
@@ -998,7 +1060,7 @@ document.addEventListener('keydown',e=>{
   const typing=/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName);
   if(e.key==='Escape'){
     if(modalCtx.type==='clue'){e.preventDefault();closeClue()}
-    else if(modalCtx.type==='info'||modalCtx.type==='edit') closeModal();
+    else if(modalCtx.type==='info'||modalCtx.type==='edit'||modalCtx.type==='mix') closeModal();
   }
   if((e.key===' '||e.code==='Space')&&!typing){
     if(modalCtx.type==='clue'){e.preventDefault();reveal()}

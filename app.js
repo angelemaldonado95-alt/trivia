@@ -227,8 +227,8 @@ const THEMES=[
   ['naturaleza',/animal|mascota|dinosaur|\bel mar\b|plantas|frutas|pets|ocean|plants|fruits/i],
   ['ciencia',/ciencia|espacio|cuerpo|tecnolog|invento|n[úu]mero|matem|science|space|body|tech|invent|number|math/i],
   ['mundo',/geograf|capital|bandera|pa[íi]ses|idioma|maravilla|del mundo|mundial|transporte|geograph|flag|countr|language|wonder|world|transport/i]];
-const MIXN={es:{peques:['Recreo revuelto','Hora del recreo','Mochila de preguntas'],musica:['Popurrí musical','Rocola revuelta','Karaoke de preguntas'],deporte:['Cancha mixta','Tiempo extra','Medalla revuelta'],juegos:['Control en mano','Juego de juegos','Nivel secreto'],cine:['Palomitas y claqueta','Función de gala','Cartelera revuelta'],mexico:['Puro México','Mole de preguntas','Lotería revuelta'],naturaleza:['Safari revuelto','Arca de Noé','Bichos y más'],ciencia:['Laboratorio loco','Ciencia revuelta','Cerebritos'],mundo:['Vuelta al mundo','Pasaporte revuelto','Maleta de preguntas'],mix:['Revoltijo','Pozole de preguntas','De todo un poco','Ensalada de preguntas','Botana surtida','Ponche de preguntas','Piñata de preguntas']},
-  en:{peques:['Recess Mix','Backpack Bonanza','Playtime'],musica:['Mixtape','Jukebox Jumble','Karaoke Night'],deporte:['Mixed Court','Overtime','Medal Mix'],juegos:['Player One','Game of Games','Secret Level'],cine:['Popcorn & Clapper','Gala Night','Movie Jumble'],mexico:['Pure Mexico','Mole Mix','Lotería Shuffle'],naturaleza:['Safari Mix','Noah\'s Ark','Critters & Co.'],ciencia:['Mad Lab','Science Shuffle','Brainiacs'],mundo:['Around the World','Passport Mix','Suitcase of Questions'],mix:['Potpourri','Question Pozole','A Bit of Everything','Trivia Salad','Mixed Snacks','Piñata of Questions']}};
+const MIXN={es:{peques:['Recreo revuelto','Hora del recreo','Mochila de preguntas'],musica:['Popurrí musical','Rocola revuelta','Karaoke de preguntas'],deporte:['Cancha mixta','Tiempo extra','Medalla revuelta'],juegos:['Control en mano','Juego de juegos','Nivel secreto'],cine:['Palomitas y claqueta','Función de gala','Cartelera revuelta'],mexico:['Puro México','Mole de preguntas','Lotería revuelta'],naturaleza:['Safari revuelto','Arca de Noé','Bichos y más'],ciencia:['Laboratorio loco','Ciencia revuelta','Cerebritos'],mundo:['Vuelta al mundo','Pasaporte revuelto','Maleta de preguntas'],familia:['Hecho en casa','Cosas de la familia','Puro chisme familiar'],mix:['Revoltijo','Pozole de preguntas','De todo un poco','Ensalada de preguntas','Botana surtida','Ponche de preguntas','Piñata de preguntas']},
+  en:{peques:['Recess Mix','Backpack Bonanza','Playtime'],musica:['Mixtape','Jukebox Jumble','Karaoke Night'],deporte:['Mixed Court','Overtime','Medal Mix'],juegos:['Player One','Game of Games','Secret Level'],cine:['Popcorn & Clapper','Gala Night','Movie Jumble'],mexico:['Pure Mexico','Mole Mix','Lotería Shuffle'],naturaleza:['Safari Mix','Noah\'s Ark','Critters & Co.'],ciencia:['Mad Lab','Science Shuffle','Brainiacs'],mundo:['Around the World','Passport Mix','Suitcase of Questions'],familia:['Homemade','Family Matters','Inside Jokes'],mix:['Potpourri','Question Pozole','A Bit of Everything','Trivia Salad','Mixed Snacks','Piñata of Questions']}};
 function themeOf(i){const n=(RAW.es[i]||{}).name||'';for(const [k,re] of THEMES)if(re.test(n))return k;return 'mix'}
 function mixNameKey(idxs){const th=[...new Set(idxs.map(themeOf))];const k=th.length===1?th[0]:'mix';return [k,Math.floor(Math.random()*MIXN.es[k].length)]}
 const mixName=(lang,nk)=>{const L=MIXN[lang]||MIXN.es,arr=L[nk[0]]||L.mix;return arr[nk[1]%arr.length]};
@@ -266,6 +266,124 @@ function mixClick(b){
   if(b.id==='mixGo'){const idxs=[...document.querySelectorAll('.mix-c input:checked')].map(x=>+x.value);if(idxs.length<2){toast(t('mixFew'));return}
     cfg.categories[mixTarget]=pickMix(cfg.lang,idxs);saveCfg();closeModal(true);renderSetup();sfx('pop');return}
 }
+/* ---------- «Arma tu tablero»: columnas arriba, categorías abajo ---------- */
+const AGE={peques:['Para los peques','Canciones infantiles','Caricaturas de hoy','Dinosaurios','Animales','Mascotas'],chavos:['Minecraft y Roblox','Palabras de los chavos','Pokémon y Nintendo','Emojis y redes','Videojuegos','Música de los 2000','Harry Potter','Caricaturas y videojuegos','Entretenimiento'],papas:['Música de los 80','Música de los 90','Rock clásico','Éxitos en inglés','Caricaturas clásicas','Marcas y logos','Tecnología','Marketing'],abuelos:['Cine de oro mexicano','Música de antaño','Del baúl de los recuerdos','Completa el refrán','TV mexicana']};
+const AGEL={es:{peques:'Niños',chavos:'Chavos',papas:'Papás',abuelos:'Abuelos',todos:'Todos',mias:'Tuya'},en:{peques:'Kids',chavos:'Teens',papas:'Parents',abuelos:'Grandparents',todos:'Everyone',mias:'Yours'}};
+function ageOf(i){const n=(RAW.es[i]||{}).name||'';for(const k in AGE)if(AGE[k].includes(n))return k;return 'todos'}
+const PRESETS=[
+  ['🎄','Posada familiar','Family posada',['Navidad y posadas','Para los peques','Música de antaño','Disney','Mérida','Retos']],
+  ['👴🧒','Chavos vs. abuelos','Teens vs. grandparents',['Palabras de los chavos','Minecraft y Roblox','Pokémon y Nintendo','Música de antaño','Cine de oro mexicano','Del baúl de los recuerdos']],
+  ['🍿','Noche de cine','Movie night',['Disney','Pixar','Star Wars','Harry Potter','Película en emojis','Cine de oro mexicano']],
+  ['🌵','Puro Yucatán','All Yucatán',['Mérida','Los mayas','Cocina yucateca','Yucatán','Navidad y posadas','Del baúl de los recuerdos']],
+  ['🎵','Pura música','All music',['Música de los 80','Música de los 90','Música de los 2000','¿Quién canta?','Banda y norteño','Música de antaño']],
+  ['⚽','Deportistas','Sports fans',['Fútbol','Béisbol','Lucha libre y box','Olimpiadas','Fórmula 1','Básquetbol y tenis']],
+  ['🧠','Cerebritos','Brainiacs',['Cultura general','Mezcla de todo','Verdadero o falso','Historia mundial','Ciencia','Capitales']]];
+const idxByName=n=>RAW.es.findIndex(c=>c.name===n);
+const TLAB={es:{todo:'Todo',mias:'Tuyas',peques:'Para niños',musica:'Música',deporte:'Deportes',juegos:'Juegos y retos',cine:'Cine y TV',mexico:'México y Yucatán',naturaleza:'Naturaleza',ciencia:'Ciencia',mundo:'Mundo',mix:'De todo'},en:{todo:'All',mias:'Yours',peques:'Kids',musica:'Music',deporte:'Sports',juegos:'Games & challenges',cine:'Movies & TV',mexico:'Mexico & Yucatán',naturaleza:'Nature',ciencia:'Science',mundo:'World',mix:'Everything else'}};
+const PKS={es:{title:'Arma tu tablero',hint:'Toca una categoría y se va a la siguiente columna libre. Para cambiar o mezclar: toca una columna; la primera categoría que toques la reemplaza y las siguientes se mezclan con ella.',filling:'llenando…',empty:'vacía',mix:'Mezcla',search:'Busca: disney, mérida, rock…',roulette:'Ruleta para lo que falte',rand:'Revoltijo',create:'Crear categoría',createSub:'La de la familia, la de la oficina…',done:'Listo',cancel:'Cancelar',full:'Ya están llenas las columnas. Toca una columna para cambiarla.',cols:'Columnas',keepL:'(la de ahora)',combos:'Combos',confManual:n=>`La columna ${n} tiene preguntas escritas a mano y se va a reemplazar. ¿Seguimos?`,confEmpty:'Hay columnas vacías. ¿Las lleno al azar?',none:'No hay categorías con ese nombre.',build:'Arma tu tablero',change:'Cambiar'},
+  en:{title:'Build your board',hint:'Tap a category and it goes to the next free column. To change or mix: tap a column; the first category you tap replaces it and the next ones mix in.',filling:'filling…',empty:'empty',mix:'Mix',search:'Search: disney, rock…',roulette:'Spin for the rest',rand:'Random mix',create:'Create category',createSub:'Your family one, your office one…',done:'Done',cancel:'Cancel',full:'All columns are full. Tap a column to change it.',cols:'Columns',keepL:'(current)',combos:'Combos',confManual:n=>`Column ${n} has hand-written questions and will be replaced. Continue?`,confEmpty:'Some columns are empty. Fill them at random?',none:'No categories match.',build:'Build your board',change:'Change'}};
+const pk=()=>PKS[cfg.lang]||PKS.es;
+let PK=null;
+function keyOfSrc(c){const s=c.src;if(s&&(s.mixk||s.mix)){const keys=s.mixk?s.mixk.slice():s.mix.map(i=>'b:'+i);return {keys,nk:s.nk,nkFor:keys.join(),cur:c.name}}if(s&&s.i!=null&&!isNaN(s.i))return {keys:['b:'+s.i]};return c.clues.some(q=>q.q.trim())||c.name?{keep:true,name:c.name||t('noName')}:{keys:[]}}
+function srcOfKey(key,lang){const [k,i]=key.split(':');return k==='b'?bankList(lang)[+i]:myBank[+i]}
+function keyLabel(key){const s=srcOfKey(key);return s?s.name||t('noName'):'?'}
+function themeOfKey(key){const [k,i]=key.split(':');return k==='m'?'mias':themeOf(+i)}
+function openPicker(active){
+  PK={slots:cfg.categories.map(keyOfSrc),active:active==null?null:active,fresh:active!=null,theme:'todo',q:''};
+  modalCtx={type:'pick'};
+  openModal(`<div class="pk" id="pk"></div>`,'card-sheet ed-sheet pk-sheet');
+  drawPicker();
+}
+function slotName(s){if(s.keep)return s.name;if(!s.keys.length)return '';if(s.keys.length===1)return keyLabel(s.keys[0]);if(s.cur&&s.nkFor===s.keys.join())return s.cur;return s.nk?mixName(cfg.lang,s.nk):pk().mix}
+function drawPicker(){
+  const el=$('#pk');if(!el||!PK)return;const P=pk(),q=normTxt(PK.q);
+  const used=new Set(PK.slots.flatMap(s=>s.keys||[]));
+  const slots=PK.slots.map((s,i)=>{const on=PK.active===i,n=slotName(s),mix=s.keys&&s.keys.length>1;
+    return `<div class="pk-slot ${n?'full':''} ${on?'on':''}" data-pslot="${i}" style="--cc:${catColor(i)}"><span class="pk-num">${i+1}</span>
+      <span class="pk-sn">${n?esc(n):`<i>${on?P.filling:P.empty}</i>`}</span>
+      ${mix?`<small>${s.keys.map(k=>esc(keyLabel(k))).join(' + ')}</small>`:s.keep?`<small>${P.keepL}</small>`:on?`<small>${P.filling}</small>`:''}
+      ${n?`<button class="pk-x" data-pclear="${i}" aria-label="×">${ic('x')}</button>`:''}</div>`}).join('');
+  const themes=['todo'].concat(myBank.length?['mias']:[],['peques','mexico','cine','musica','deporte','juegos','naturaleza','ciencia','mundo','mix']);
+  const TL=TLAB[cfg.lang]||TLAB.es, AL=AGEL[cfg.lang]||AGEL.es;
+  const all=bankList().map((b,i)=>({key:'b:'+i,name:b.name,th:themeOf(i),age:ageOf(i)})).concat(myBank.map((b,i)=>({key:'m:'+i,name:b.name||t('noName'),th:'mias',age:'mias'})));
+  const vis=all.filter(c=>(PK.theme==='todo'||c.th===PK.theme)&&(!q||normTxt(c.name).includes(q)));
+  const inSlot=k=>{const a=PK.active;if(a!=null)return (PK.slots[a].keys||[]).includes(k);return used.has(k)};
+  const slotNo=k=>{const i=PK.slots.findIndex(s=>(s.keys||[]).includes(k));return i>=0?i+1:''};
+  el.innerHTML=`
+  <div class="sh-top"><span class="cchip">${P.title}</span><span class="sp"></span>
+    <span class="pk-cols">${P.cols} ${[3,4,5,6].map(n=>`<button class="chip ${n===PK.slots.length?'on':''}" data-pcols="${n}">${n}</button>`).join('')}</span></div>
+  <div class="pk-slots" style="--n:${PK.slots.length}">${slots}</div>
+  <p class="hint pk-hint">${P.hint}</p>
+  <div class="pk-row"><span class="lb">${P.combos}</span>${PRESETS.map((p,i)=>`<button class="chip" data-ppre="${i}">${p[0]} ${esc(cfg.lang==='en'?p[2]:p[1])}</button>`).join('')}</div>
+  <div class="pk-row"><button class="btn sm gold" id="pkSpin">${ic('dice')} ${P.roulette}</button><button class="btn sm" id="pkRand">${ic('dice')} ${P.rand}</button><input type="text" id="pkQ" value="${esc(PK.q)}" placeholder="${P.search}"></div>
+  <div class="pk-row pk-themes">${themes.map(k=>`<button class="chip ${k===PK.theme?'on':''}" data-ptheme="${k}">${TL[k]}</button>`).join('')}</div>
+  <div class="pk-grid">
+    <button class="pk-card pk-new" id="pkNew">${ic('plus')}<b>${P.create}</b><small>${P.createSub}</small></button>
+    ${vis.map(c=>`<button class="pk-card ${inSlot(c.key)?'sel':''} th-${c.th}" data-pkey="${c.key}">${inSlot(c.key)||used.has(c.key)?`<span class="pk-badge">${slotNo(c.key)}</span>`:''}<b>${esc(c.name)}</b><small>${AL[c.age]||AL.todos}</small></button>`).join('')||`<p class="hint">${P.none}</p>`}
+  </div>
+  <div class="actions"><button class="btn dark" id="pkDone">${ic('check')} ${P.done}</button><button class="btn" id="pkCancel">${P.cancel}</button></div>`;
+  const qi=$('#pkQ');if(qi&&PK.focusQ){qi.focus();qi.setSelectionRange(qi.value.length,qi.value.length);PK.focusQ=false}
+}
+function normTxt(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')}
+function pkSetNk(s){if(s.keys&&s.keys.length>1){if(!s.nk||s.nkFor!==s.keys.join())s.nk=mixNameKeyK(s.keys),s.nkFor=s.keys.join()}else{delete s.nk;delete s.nkFor}}
+function mixNameKeyK(keys){const th=[...new Set(keys.map(themeOfKey))];const k=th.length===1?(th[0]==='mias'?'familia':th[0]):'mix';const L=MIXN.es[k]||MIXN.es.mix;return [MIXN.es[k]?k:'mix',Math.floor(Math.random()*L.length)]}
+function pickerClick(b){
+  const d=b.dataset,P=pk();
+  if(d.pslot!=null){const i=+d.pslot;PK.active=PK.active===i?null:i;PK.fresh=PK.active!=null;drawPicker();return}
+  if(d.pclear!=null){const i=+d.pclear;PK.slots[i]={keys:[]};PK.active=null;drawPicker();return}
+  if(d.pcols){const n=+d.pcols;while(PK.slots.length<n)PK.slots.push({keys:[]});PK.slots=PK.slots.slice(0,n);if(PK.active>=n)PK.active=null;drawPicker();return}
+  if(d.ptheme){PK.theme=d.ptheme;drawPicker();return}
+  if(d.ppre!=null){const p=PRESETS[+d.ppre][3].map(idxByName).filter(i=>i>=0);PK.slots=PK.slots.map((s,i)=>p[i]!=null?{keys:['b:'+p[i]]}:s);PK.active=null;drawPicker();sfx('pop');return}
+  if(d.pkey){const k=d.pkey;
+    if(PK.active!=null){const s=PK.slots[PK.active];if(s.keep||PK.fresh){PK.slots[PK.active]={keys:[k]};PK.fresh=false;sfx('pop')}else{const j=s.keys.indexOf(k);if(j>=0)s.keys.splice(j,1);else s.keys.push(k);pkSetNk(s)}drawPicker();return}
+    const at=PK.slots.findIndex(s=>s.keys&&s.keys.length===1&&s.keys[0]===k);if(at>=0){PK.slots[at]={keys:[]};drawPicker();return}
+    const e=PK.slots.findIndex(s=>!s.keep&&!(s.keys&&s.keys.length));if(e<0){toast(P.full);return}
+    PK.slots[e]={keys:[k]};drawPicker();sfx('pop');return}
+  if(b.id==='pkRand'){const tgt=PK.active!=null?PK.active:PK.slots.findIndex(s=>!s.keep&&!(s.keys&&s.keys.length));if(tgt<0){toast(P.full);return}
+    const ks=shuffle(RAW[cfg.lang].map((_,i)=>'b:'+i)).slice(0,3);PK.slots[tgt]={keys:ks};pkSetNk(PK.slots[tgt]);PK.active=null;drawPicker();sfx('pop');return}
+  if(b.id==='pkSpin'){spinPicker();return}
+  if(b.id==='pkNew'){PK.returnTo=PK.active;PK.freshAtNew=PK.fresh;PK.pending=true;closeModal(true);openBankEditor(null);return}
+  if(b.id==='pkCancel'){PK=null;closeModal();return}
+  if(b.id==='pkDone'){applyPicker();return}
+}
+function spinPicker(){
+  const empt=PK.slots.map((s,i)=>(!s.keep&&!(s.keys&&s.keys.length))?i:-1).filter(i=>i>=0);if(!empt.length){toast(pk().full);return}
+  const used=new Set(PK.slots.flatMap(s=>s.keys||[]));
+  const pool=shuffle(RAW[cfg.lang].map((_,i)=>'b:'+i).filter(k=>!used.has(k)));
+  const fin=empt.map((_,j)=>pool[j]);let n=0;
+  const tick=setInterval(()=>{n++;empt.forEach((i,j)=>{const el=document.querySelector(`[data-pslot="${i}"] .pk-sn`);if(el)el.textContent=keyLabel(pool[(n*7+j*3)%pool.length])});sfx('tick');
+    if(n>=12){clearInterval(tick);empt.forEach((i,j)=>PK.slots[i]={keys:[fin[j]]});drawPicker();sfx('pop')}},70);
+}
+function pickMixKeys(lang,keys,nk){
+  const order=shuffle(keys.slice()),picks=[];
+  for(let k=0;k<5;k++){let got=null;
+    for(let tr=0;tr<order.length&&!got;tr++){const key=order[(k+tr)%order.length],src=srcOfKey(key,lang);if(!src)continue;
+      const n=src.clues.length,pool=[];for(let i=0;i<n;i++)if(Math.floor(i*5/n)===k&&src.clues[i].q)pool.push(i);
+      if(!pool.length&&n)for(let i=0;i<n;i++)if(src.clues[i].q)pool.push(i);
+      if(pool.length)got=[key,pool[Math.floor(Math.random()*pool.length)]];}
+    picks.push(got||['',-1]);}
+  nk=nk||mixNameKeyK(keys);
+  const clues=picks.map(([key,qi])=>{const s=key&&srcOfKey(key,lang);return s&&qi>=0?{q:s.clues[qi].q||'',a:s.clues[qi].a||''}:{q:'',a:''}});
+  const allB=keys.every(k=>k.startsWith('b:'))&&keys.every(k=>!bankList(lang)[+k.split(':')[1]].edited);
+  const src=allB?{lang,mix:keys.map(k=>+k.split(':')[1]),picks:picks.map(([key,qi])=>key?[+key.split(':')[1],qi]:[-1,-1]),nk}:{lang,mixk:keys.slice(),picks:picks.map(([key,qi])=>[key,qi]),nk};
+  return {name:mixName(lang,nk),clues,src};
+}
+function applyPicker(){
+  const P=pk();
+  const empties=PK.slots.some(s=>!s.keep&&!(s.keys&&s.keys.length));
+  if(empties){if(!confirm(P.confEmpty))return;
+    const used=new Set(PK.slots.flatMap(s=>s.keys||[]));const pool=shuffle(RAW[cfg.lang].map((_,i)=>'b:'+i).filter(k=>!used.has(k)));
+    PK.slots.forEach(s=>{if(!s.keep&&!(s.keys&&s.keys.length))s.keys=[pool.pop()]})}
+  for(let i=0;i<PK.slots.length;i++){const s=PK.slots[i],c=cfg.categories[i];if(s.keep||!c)continue;
+    const same=JSON.stringify(keyOfSrc(c).keys||null)===JSON.stringify(s.keys);
+    if(!same&&!c.src&&c.clues.some(q=>q.q.trim())&&!confirm(P.confManual(i+1)))return}
+  cfg.categories=PK.slots.map((s,i)=>{const c=cfg.categories[i];if(s.keep)return c;
+    const same=c&&JSON.stringify(keyOfSrc(c).keys||null)===JSON.stringify(s.keys);if(same)return c;
+    if(s.keys.length===1){const [k,j]=s.keys[0].split(':');return k==='b'?catFromKey(s.keys[0]):pickCat(myBank[+j])}
+    const m=pickMixKeys(cfg.lang,s.keys,s.nk);return m});
+  PK=null;saveCfg();closeModal(true);renderSetup();sfx('pop');
+}
+
 function randomCats(n,lang){const list=bankList(lang);return shuffle(list).slice(0,n).map(b=>pickCat(b,b.edited?null:{lang,i:b.idx}))}
 
 function defaultConfig(lang=navLang){
@@ -284,7 +402,7 @@ function normalize(c){
   if(!Array.isArray(c.teams)||c.teams.length<1) c.teams=d.teams;
   c.teams=c.teams.slice(0,6).map((tm,i)=>({name:String(tm.name||STR[lang].team(i+1)),color:/^#[0-9a-f]{3,8}$/i.test(tm.color||'')?tm.color:PALETTE[i%PALETTE.length]}));
   if(!Array.isArray(c.categories)||!c.categories.length) c.categories=d.categories;
-  c.categories=c.categories.slice(0,6).map(k=>{const o={name:String(k.name||''),clues:Array.from({length:5},(_,i)=>({q:String(k.clues?.[i]?.q||''),a:String(k.clues?.[i]?.a||'')}))};if(k.src&&Array.isArray(k.src.mix)&&Array.isArray(k.src.picks))o.src={lang:k.src.lang,mix:k.src.mix.map(Number),picks:k.src.picks.map(p=>[+p[0],+p[1]]),nk:Array.isArray(k.src.nk)?[String(k.src.nk[0]),+k.src.nk[1]]:['mix',0]};else if(k.src&&Array.isArray(k.src.picks))o.src={lang:k.src.lang,i:+k.src.i,picks:k.src.picks.map(Number)};return o});
+  c.categories=c.categories.slice(0,6).map(k=>{const o={name:String(k.name||''),clues:Array.from({length:5},(_,i)=>({q:String(k.clues?.[i]?.q||''),a:String(k.clues?.[i]?.a||'')}))};if(k.src&&Array.isArray(k.src.mixk)&&Array.isArray(k.src.picks))o.src={lang:k.src.lang,mixk:k.src.mixk.map(String),picks:k.src.picks.map(p=>[String(p[0]),+p[1]]),nk:Array.isArray(k.src.nk)?[String(k.src.nk[0]),+k.src.nk[1]]:['mix',0]};else if(k.src&&Array.isArray(k.src.mix)&&Array.isArray(k.src.picks))o.src={lang:k.src.lang,mix:k.src.mix.map(Number),picks:k.src.picks.map(p=>[+p[0],+p[1]]),nk:Array.isArray(k.src.nk)?[String(k.src.nk[0]),+k.src.nk[1]]:['mix',0]};else if(k.src&&Array.isArray(k.src.picks))o.src={lang:k.src.lang,i:+k.src.i,picks:k.src.picks.map(Number)};return o});
   c.final=Object.assign({category:'',q:'',a:''},c.final||{});
   ['step','timer','finalTimer','dd'].forEach(k=>{c[k]=Number(c[k])||0});if(!c.step)c.step=100;
   return c;
@@ -423,7 +541,7 @@ function tplPreguntas(){
     <section class="cat" style="--cc:${catColor(ci)};--k:${ci}">
       <div class="cat-band"><span class="num">${ci+1}</span><input type="text" class="cat-name" data-c="${ci}" placeholder="${t('catName')}" value="${esc(c.name)}" maxlength="40"></div>
       <div class="cat-tools">
-        <select data-load="${ci}" aria-label="${t('loadBank')}">${opts}</select>
+        <button class="btn sm pk-open" data-picker="${ci}">${ic('grid')} ${pk().change}</button>
         ${c.src?`<button class="btn sm icon" data-reroll="${ci}" title="${t('reroll')}" aria-label="${t('reroll')}">${ic('dice')}</button>`:''}
         <button class="btn sm icon" data-savebank="${ci}" title="${t('saveMine')}" aria-label="${t('saveMine')}">${ic('save')}</button>
         <button class="btn sm icon red" data-clear="${ci}" title="${t('clearCat')}" aria-label="${t('clearCat')}">${ic('trash')}</button>
@@ -445,6 +563,7 @@ function tplPreguntas(){
     <label class="lb" for="ncats">${t('cats')}</label>
     <select id="ncats">${[3,4,5,6].map(n=>`<option ${n===cfg.categories.length?'selected':''}>${n}</option>`).join('')}</select>
     <span class="grow"></span>
+    <button class="btn sm gold" id="btnPicker">${ic('grid')} ${pk().build}</button>
     <button class="btn sm" id="btnRandom">${ic('dice')} ${t('random')}</button>
     <button class="btn sm red" id="btnBlank">${ic('trash')} ${t('clearAll')}</button>
   </div>
@@ -591,6 +710,10 @@ function bankEditorClick(b){
     else if(x.k==='m'){myBank[x.i]=cat;store.set(LS_BANK,myBank)}
     else{myBank.unshift(cat);store.set(LS_BANK,myBank)}
     closeModal(true);renderSetup();toast(t('savedOk'));
+    if(PK&&PK.pending&&x.k==='new'){PK.pending=false;const shift=k=>k.startsWith('m:')?'m:'+(+k.slice(2)+1):k;PK.slots.forEach(s=>{if(s.keys)s.keys=s.keys.map(shift)});
+      const a=PK.returnTo!=null?PK.returnTo:PK.slots.findIndex(s=>!s.keep&&!(s.keys&&s.keys.length));
+      if(a>=0){const s=PK.slots[a];if(PK.returnTo!=null&&!PK.fresh&&s.keys&&s.keys.length&&!s.keep){s.keys.push('m:0');pkSetNk(s)}else PK.slots[a]={keys:['m:0']}}
+      modalCtx={type:'pick'};openModal(`<div class="pk" id="pk"></div>`,'card-sheet ed-sheet pk-sheet');PK.active=null;drawPicker()}
   }
 }
 
@@ -604,10 +727,13 @@ $('#setup').addEventListener('click',e=>{
   if(b.id==='btnRC'){const c=prompt(t('askCode'));if(c&&typeof startRemote==='function')startRemote(c);return}
   if(b.id==='rcBack'){showRemote();return}
   if(b.id==='tvBack'){showTV();return}
+  if(b.id==='btnPicker'){openPicker(null);return}
+  if(b.dataset.picker!=null){openPicker(+b.dataset.picker);return}
   if(b.id==='btnRandom'){if(!confirm(t('confRandom')))return;cfg.categories=randomCats(cfg.categories.length,cfg.lang);saveCfg();renderSetup();toast(t('tRandom'));return}
   if(b.id==='btnBlank'){if(!confirm(t('confBlank')))return;cfg.categories=cfg.categories.map(blankCat);cfg.final={category:'',q:'',a:''};saveCfg();renderSetup();return}
   if(b.dataset.clear){const i=+b.dataset.clear;if(!confirm(t('confClear')))return;cfg.categories[i]=blankCat();saveCfg();renderSetup();return}
   if(b.dataset.reroll){const i=+b.dataset.reroll,s=cfg.categories[i].src;if(!s)return;
+    if(s.mixk){const old=cfg.categories[i].name,keep=old!==mixName(s.lang,s.nk);const c=pickMixKeys(s.lang,s.mixk,s.nk);if(keep)c.name=old;cfg.categories[i]=c;saveCfg();renderSetup();sfx('pop');return}
     if(s.mix){const old=cfg.categories[i].name,keep=old!==mixName(s.lang,s.nk);const c=pickMix(s.lang,s.mix,s.nk);if(keep)c.name=old;cfg.categories[i]=c;saveCfg();renderSetup();sfx('pop');return}const B=bankList(s.lang)[s.i];if(!B)return;cfg.categories[i]=pickCat(B,B.edited?null:{lang:s.lang,i:s.i});saveCfg();renderSetup();sfx('pop');return}
   if(b.dataset.savebank){const c=cfg.categories[+b.dataset.savebank];if(!c.name.trim()&&!c.clues.some(q=>q.q.trim())){toast(t('emptyCat'));return}
     const cat={name:c.name,clues:c.clues.filter(q=>q.q.trim()).map(q=>({q:q.q,a:q.a}))};
@@ -1028,11 +1154,13 @@ $('#results').addEventListener('click',e=>{const b=e.target.closest('button');if
   if(b.id==='rEdit'){stopConfetti();game=null;store.del(LS_GAME);sync();backToSetup()}
 });
 
+$('#modal').addEventListener('input',e=>{if(e.target.id==='pkQ'&&PK){PK.q=e.target.value;PK.focusQ=true;drawPicker()}});
 $('#modal').addEventListener('click',e=>{
-  const b=e.target.closest('button'); if(!b||busy) return;
+  const b=e.target.closest('button')||e.target.closest('[data-pslot]'); if(!b||busy) return;
   const x=modalCtx; if(!x) return;
   if(x.type==='edit'){bankEditorClick(b);return}
   if(x.type==='mix'){mixClick(b);return}
+  if(x.type==='pick'){pickerClick(b);return}
   if(x.type==='clue'){
     if(b.id==='btnReveal') reveal();
     else if(b.id==='btnClose') closeClue();
@@ -1060,7 +1188,7 @@ document.addEventListener('keydown',e=>{
   const typing=/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName);
   if(e.key==='Escape'){
     if(modalCtx.type==='clue'){e.preventDefault();closeClue()}
-    else if(modalCtx.type==='info'||modalCtx.type==='edit'||modalCtx.type==='mix') closeModal();
+    else if(modalCtx.type==='info'||modalCtx.type==='edit'||modalCtx.type==='mix'){if(modalCtx.type==='pick')PK=null;closeModal()}else if(modalCtx.type==='pick'){PK=null;closeModal()}
   }
   if((e.key===' '||e.code==='Space')&&!typing){
     if(modalCtx.type==='clue'){e.preventDefault();reveal()}

@@ -448,6 +448,34 @@ body.stage .toast{background:var(--paper);color:var(--ink)}
 .mix-g legend{font-weight:800;text-transform:uppercase;letter-spacing:.05em;font-size:12px;padding:0 6px}
 .mix-c{display:flex;gap:8px;align-items:center;padding:3px 0;font-weight:600;cursor:pointer}
 .mix-c input{width:18px;height:18px;accent-color:var(--ink)}
+.pk-sheet{max-width:min(1100px,96vw)!important;max-height:94vh;overflow:auto}
+.pk-sheet .actions{position:sticky;bottom:calc(-1 * var(--pkp,40px));background:inherit;background-color:var(--paper2);padding:12px var(--pkp,40px) var(--pkp,40px);margin:0 calc(-1 * var(--pkp,40px)) calc(-1 * var(--pkp,40px));z-index:2;border-top:2px solid var(--ink)}
+.pk-cols{display:flex;gap:6px;align-items:center;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+.pk .chip{border:2px solid var(--ink);background:var(--paper2);border-radius:999px;padding:4px 11px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap}
+.pk .chip.on{background:var(--ink);color:var(--paper)}
+.pk-slots{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:10px;margin:14px 0 8px}
+.pk-slot{position:relative;border:3px dashed var(--ink);border-radius:14px;min-height:96px;padding:32px 10px 10px;display:flex;flex-direction:column;justify-content:flex-start;cursor:pointer;background:var(--paper);transition:transform .1s}
+.pk-slot.full{border-style:solid;background:var(--cc);box-shadow:0 4px 0 var(--ink)}
+.pk-slot.on{outline:4px solid var(--gold);outline-offset:2px;transform:translateY(-2px)}
+.pk-num{position:absolute;left:8px;top:8px;width:20px;height:20px;border-radius:50%;background:var(--ink);color:var(--paper);display:grid;place-items:center;font-size:12px;font-weight:800}
+.pk-sn{font-family:var(--display);text-transform:uppercase;font-size:16px;line-height:1.05;overflow-wrap:break-word;hyphens:auto}
+.pk-sn i{font-family:var(--sans);text-transform:none;font-size:13px;opacity:.6}
+.pk-slot small{font-size:11px;font-weight:700;opacity:.8;margin-top:3px}
+.pk-x{position:absolute;right:4px;top:4px;border:none;background:rgba(255,255,255,.7);border-radius:50%;width:22px;height:22px;display:grid;place-items:center;cursor:pointer}
+.pk-x .i{width:14px;height:14px}
+.pk-hint{margin:4px 0 10px}
+.pk-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 10px}
+.pk-row input{flex:1;min-width:200px}
+.pk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;max-height:max(180px,calc(100vh - 560px));overflow:auto;padding:4px 2px 8px;margin-bottom:12px}
+.pk-card{position:relative;text-align:left;border:2px solid var(--ink);border-radius:12px;background:var(--paper2);padding:8px 10px;cursor:pointer;display:flex;flex-direction:column;gap:2px;box-shadow:0 3px 0 var(--ink);transition:transform .08s}
+.pk-card:hover{transform:translateY(-2px)}
+.pk-card b{font-size:14px;line-height:1.2}
+.pk-card small{font-size:11px;font-weight:700;opacity:.65;text-transform:uppercase;letter-spacing:.04em}
+.pk-card.sel{background:var(--gold)}
+.pk-badge{position:absolute;right:6px;top:6px;background:var(--ink);color:var(--paper);border-radius:999px;font-size:11px;font-weight:800;padding:1px 7px}
+.pk-new{border-style:dashed;background:var(--paper);align-items:flex-start}
+.pk-new .i{width:18px;height:18px}
+@media (max-width:760px){.pk-slots{grid-template-columns:repeat(3,minmax(0,1fr))}.pk-sn{font-size:14px}}
 </style>
 </head>
 <body>
@@ -460,8 +488,8 @@ body.stage .toast{background:var(--paper);color:var(--ink)}
 <canvas id="confetti" hidden></canvas>
 <input type="file" id="importFile" accept=".json,application/json" hidden>
 
-<script src="bank.js?v=3"></script>
-<script src="app.js?v=3"></script>
-<script src="remote.js?v=3"></script>
+<script src="bank.js?v=7"></script>
+<script src="app.js?v=7"></script>
+<script src="remote.js?v=7"></script>
 </body>
 </html>
